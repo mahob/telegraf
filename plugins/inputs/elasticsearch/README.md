@@ -88,7 +88,7 @@ Emitted when `cluster_health = true`:
 
 - elasticsearch_cluster_health
   - tags:
-    - name
+    - cluster_name
   - fields:
     - active_primary_shards (integer)
     - active_shards (integer)
@@ -110,8 +110,8 @@ Emitted when `cluster_health = true` and `cluster_health_level = "indices"`:
 
 - elasticsearch_cluster_health_indices
   - tags:
+    - cluster_name
     - index
-    - name
   - fields:
     - active_primary_shards (integer)
     - active_shards (integer)

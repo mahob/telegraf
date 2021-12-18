@@ -128,7 +128,7 @@ func TestGatherClusterHealthEmptyClusterHealth(t *testing.T) {
 
 	acc.AssertContainsTaggedFields(t, "elasticsearch_cluster_health",
 		clusterHealthExpected,
-		map[string]string{"name": "elasticsearch_telegraf"})
+		map[string]string{"cluster_name": "es-testcluster"})
 
 	acc.AssertDoesNotContainsTaggedFields(t, "elasticsearch_cluster_health_indices",
 		v1IndexExpected,
@@ -154,7 +154,7 @@ func TestGatherClusterHealthSpecificClusterHealth(t *testing.T) {
 
 	acc.AssertContainsTaggedFields(t, "elasticsearch_cluster_health",
 		clusterHealthExpected,
-		map[string]string{"name": "elasticsearch_telegraf"})
+		map[string]string{"cluster_name": "es-testcluster"})
 
 	acc.AssertDoesNotContainsTaggedFields(t, "elasticsearch_cluster_health_indices",
 		v1IndexExpected,
@@ -180,15 +180,15 @@ func TestGatherClusterHealthAlsoIndicesHealth(t *testing.T) {
 
 	acc.AssertContainsTaggedFields(t, "elasticsearch_cluster_health",
 		clusterHealthExpected,
-		map[string]string{"name": "elasticsearch_telegraf"})
+		map[string]string{"cluster_name": "es-testcluster"})
 
 	acc.AssertContainsTaggedFields(t, "elasticsearch_cluster_health_indices",
 		v1IndexExpected,
-		map[string]string{"index": "v1", "name": "elasticsearch_telegraf"})
+		map[string]string{"index": "v1", "cluster_name": "es-testcluster"})
 
 	acc.AssertContainsTaggedFields(t, "elasticsearch_cluster_health_indices",
 		v2IndexExpected,
-		map[string]string{"index": "v2", "name": "elasticsearch_telegraf"})
+		map[string]string{"index": "v2", "cluster_name": "es-testcluster"})
 }
 
 func TestGatherClusterStatsMaster(t *testing.T) {
