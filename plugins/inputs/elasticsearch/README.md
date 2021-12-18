@@ -14,7 +14,7 @@ In addition, the following optional queries are only made by the master node:
 Specific Elasticsearch endpoints that are queried:
 
 - Node: either /_nodes/stats or /_nodes/_local/stats depending on 'local' configuration setting
-- Cluster Heath:  /_cluster/health?level=indices
+- Cluster Health:  /_cluster/health?level=indices
 - Cluster Stats:  /_cluster/stats
 - Indices Stats:  /_all/_stats
 - Shard Stats:  /_all/_stats?level=shards
