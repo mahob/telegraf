@@ -11,7 +11,10 @@ The example below has two queries are specified, with the following parameters:
 * The name of the measurement
 * A list of the columns to be defined as tags
 
+## Configuration
+
 ```toml
+# Read metrics from one or many postgresql servers
 [[inputs.postgresql_extensible]]
   # specify address via a url matching:
   # postgres://[pqgotest[:password]]@host:port[/dbname]?sslmode=...
@@ -28,7 +31,12 @@ The example below has two queries are specified, with the following parameters:
   # A list of databases to pull metrics about. If not specified, metrics for all
   # databases are gathered.
   # databases = ["app_production", "testing"]
-  #
+
+  ## Whether to use prepared statements when connecting to the database.
+  ## This should be set to false when connecting through a PgBouncer instance
+  ## with pool_mode set to transaction.
+  prepared_statements = true
+
   # Define the toml config where the sql queries are stored
   # New queries can be added, if the withdbname is set to true and there is no
   # databases defined in the 'databases field', the sql query is ended by a 'is
@@ -54,7 +62,7 @@ The example below has two queries are specified, with the following parameters:
   #
   # The timestamp field is used to override the data points timestamp value. By
   # default, all rows inserted with current time. By setting a timestamp column,
-  # the row will be inserted with that column's value. 
+  # the row will be inserted with that column's value.
   #
   # Structure :
   # [[inputs.postgresql_extensible.query]]

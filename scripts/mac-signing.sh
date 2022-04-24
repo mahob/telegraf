@@ -53,7 +53,7 @@ do
   printf "\n"
 
   cp ~/project/info.plist "$RootAppDir"
-  cp  ~/project/assets/icon.icns "$RootAppDir/Resources"
+  cp  ~/project/assets/windows/icon.icns "$RootAppDir/Resources"
 
   chmod +x "$RootAppDir/MacOS/telegraf_entry_mac"
 
@@ -95,7 +95,8 @@ do
   xcrun stapler staple "$baseName".dmg
   cleanup
 
-  mv "$baseName".dmg ~/project/dist
+  mkdir -p ~/project/build/dist
+  mv "$baseName".dmg ~/project/build/dist
 
   echo "$baseName.dmg signed and notarized!"
 done

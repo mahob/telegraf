@@ -1,5 +1,11 @@
-next_version :=  $(shell cat build_version.txt)
-tag := $(shell git describe --exact-match --tags 2>git_describe_error.tmp; rm -f git_describe_error.tmp)
+ifeq ($(OS),Windows_NT)
+	next_version := $(shell type build_version.txt)
+	tag := $(shell git describe --exact-match --tags 2> nul)
+else
+	next_version := $(shell cat build_version.txt)
+	tag := $(shell git describe --exact-match --tags 2>/dev/null)
+endif
+
 branch := $(shell git rev-parse --abbrev-ref HEAD)
 commit := $(shell git rev-parse --short=8 HEAD)
 glibc_version := 2.17
@@ -99,9 +105,30 @@ help:
 deps:
 	go mod download -x
 
-.PHONY: telegraf
-telegraf:
+.PHONY: version
+version:
+	@echo $(version)-$(commit)
+
+.PHONY: versioninfo
+versioninfo:
+	go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@v1.4.0; \
+	go run scripts/generate_versioninfo/main.go; \
+	go generate cmd/telegraf/telegraf_windows.go; \
+
+.PHONY: generate
+generate:
+	go generate -run="plugindata/main.go$$" ./plugins/inputs/... ./plugins/outputs/... ./plugins/processors/... ./plugins/aggregators/...
+
+.PHONY: generate-clean
+generate-clean:
+	go generate -run="plugindata/main.go --clean" ./plugins/inputs/... ./plugins/outputs/... ./plugins/processors/... ./plugins/aggregators/...
+
+.PHONY: build
+build:
 	go build -ldflags "$(LDFLAGS)" ./cmd/telegraf
+
+.PHONY: telegraf
+telegraf: generate build generate-clean
 
 # Used by dockerfile builds
 .PHONY: go-install
@@ -143,7 +170,7 @@ vet:
 .PHONY: lint-install
 lint-install:
 	@echo "Installing golangci-lint"
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.45.2
 
 	@echo "Installing markdownlint"
 	npm install -g markdownlint-cli
@@ -209,10 +236,10 @@ plugin-%:
 	@echo "Starting dev environment for $${$(@)} input plugin..."
 	@docker-compose -f plugins/inputs/$${$(@)}/dev/docker-compose.yml up
 
-.PHONY: ci-1.17
-ci-1.17:
-	docker build -t quay.io/influxdb/telegraf-ci:1.17.3 - < scripts/ci-1.17.docker
-	docker push quay.io/influxdb/telegraf-ci:1.17.3
+.PHONY: ci
+ci:
+	docker build -t quay.io/influxdb/telegraf-ci:1.18.1 - < scripts/ci.docker
+	docker push quay.io/influxdb/telegraf-ci:1.18.1
 
 .PHONY: install
 install: $(buildbin)
@@ -235,6 +262,7 @@ install: $(buildbin)
 # the bin between deb/rpm/tar packages over building directly into the package
 # directory.
 $(buildbin):
+	echo $(GOOS)
 	@mkdir -pv $(dir $@)
 	go build -o $(dir $@) -ldflags "$(LDFLAGS)" ./cmd/telegraf
 
@@ -269,6 +297,10 @@ armhf += linux_armhf.tar.gz freebsd_armv7.tar.gz armhf.deb armv6hl.rpm
 armhf:
 	@ echo $(armhf)
 s390x += linux_s390x.tar.gz s390x.deb s390x.rpm
+.PHONY: riscv64
+riscv64:
+	@ echo $(riscv64)
+riscv64 += linux_riscv64.tar.gz riscv64.rpm riscv64.deb
 .PHONY: s390x
 s390x:
 	@ echo $(s390x)
@@ -294,10 +326,10 @@ darwin-arm64 += darwin_arm64.tar.gz
 darwin-arm64:
 	@ echo $(darwin-arm64)
 
-include_packages := $(mips) $(mipsel) $(arm64) $(amd64) $(static) $(armel) $(armhf) $(s390x) $(ppc64le) $(i386) $(windows) $(darwin-amd64) $(darwin-arm64)
+include_packages := $(mips) $(mipsel) $(arm64) $(amd64) $(static) $(armel) $(armhf) $(riscv64) $(s390x) $(ppc64le) $(i386) $(windows) $(darwin-amd64) $(darwin-arm64)
 
 .PHONY: package
-package: $(include_packages)
+package: generate $(include_packages) generate-clean
 
 .PHONY: $(include_packages)
 $(include_packages):
@@ -383,6 +415,9 @@ mips.deb linux_mips.tar.gz: export GOARCH := mips
 
 mipsel.deb linux_mipsel.tar.gz: export GOOS := linux
 mipsel.deb linux_mipsel.tar.gz: export GOARCH := mipsle
+
+riscv64.deb riscv64.rpm linux_riscv64.tar.gz: export GOOS := linux
+riscv64.deb riscv64.rpm linux_riscv64.tar.gz: export GOARCH := riscv64
 
 s390x.deb s390x.rpm linux_s390x.tar.gz: export GOOS := linux
 s390x.deb s390x.rpm linux_s390x.tar.gz: export GOARCH := s390x
